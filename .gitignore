@@ -1,0 +1,8 @@
+parts
+prime
+stage
+.*.swp
+*_source.tar.bz2
+charm/builds
+charm/deps
+.tox

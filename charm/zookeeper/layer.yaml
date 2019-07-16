@@ -1,0 +1,13 @@
+includes:
+- "layer:basic"
+- "layer:leadership"
+- "interface:zookeeper"
+- "interface:zookeeper-quorum"
+- "layer:apt"
+- "interface:nrpe-external-master"
+- "interface:local-monitors"
+options:
+  apt:
+    packages:
+    - zookeeper
+is: "zookeeper"
