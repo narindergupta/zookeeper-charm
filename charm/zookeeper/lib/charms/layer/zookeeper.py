@@ -148,7 +148,7 @@ class Zookeeper(object):
             return "STARTED" in status.decode('utf-8')
         except Exception:
             hookenv.log(
-                "Unable to determine whether this node is the Zookeeper "
+                "Unable to start this node as the Zookeeper "
                 "leader.",
                 level="WARN"
             )
@@ -159,8 +159,17 @@ class Zookeeper(object):
         Restart zookeeper.
 
         '''
-        self.stop()
-        return self.start()
+        try:
+            status = subprocess.check_output(
+                ["/usr/share/{}/bin/zkServer.sh".format(APP_NAME), "restart"])
+            return "STARTED" in status.decode('utf-8')
+        except Exception:
+            hookenv.log(
+                "Unable to restart this node is the Zookeeper "
+                "leader.",
+                level="WARN"
+            )
+            return False
 
     def stop(self):
         '''
@@ -173,7 +182,7 @@ class Zookeeper(object):
             return "STOPPED" in status.decode('utf-8')
         except Exception:
             hookenv.log(
-                "Unable to determine whether this node is the Zookeeper "
+                "Unable to stop this node"
                 "leader.",
                 level="WARN"
             )

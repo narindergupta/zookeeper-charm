@@ -61,6 +61,7 @@ def _restart_zookeeper(msg):
 @when('zookeeper.started', 'zookeeper.joined')
 def serve_client(client):
     client.send_port(ZK_PORT, ZK_REST_PORT)
+    clear_flag('zookeeper.configured')
 
 
 #
