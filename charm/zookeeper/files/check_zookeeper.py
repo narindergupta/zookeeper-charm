@@ -33,7 +33,9 @@ import socket
 import logging
 import re
 import subprocess
+import os
 
+from datetime import datetime
 from io import StringIO
 from optparse import OptionParser, OptionGroup
 
@@ -80,8 +82,8 @@ class NagiosHandler(object):
                 if warning >= value > critical or warning <= value < critical:
                     warning_state.append(host)
 
-                elif ((warning < critical and critical <= value) or
-                      (warning > critical and critical >= value)):
+                elif ((warning < critical and critical <= value)
+                      or (warning > critical and critical >= value)):
                     critical_state.append(host)
 
         values = ' '.join(values)
@@ -174,9 +176,27 @@ class GangliaHandler(object):
 
 class ZooKeeperServer(object):
 
-    def __init__(self, host='localhost', port='2181', timeout=1):
+    def __init__(self, host='localhost', port='2181', timeout=1,
+                 meta_file='/tmp/zk_check/meta'):
         self._address = (host, int(port))
         self._timeout = timeout
+        self._last_reset = datetime.utcnow()
+        self._meta_path = meta_file
+
+        os.makedirs(os.path.dirname(meta_file), exist_ok=True)
+
+        with open(meta_file, 'a+') as f:
+            f.seek(0)
+            buf = f.read().strip()
+            if len(buf) > 0:
+                try:
+                    self._last_reset = datetime.utcfromtimestamp(float(buf))
+                except ValueError:
+                    f.seek(0)
+                    f.truncate()
+                    f.write(str(self._last_reset.timestamp()))
+            else:
+                f.write(str(self._last_reset.timestamp()))
 
     def get_stats(self):
         """ Get ZooKeeper server stats as a map """
@@ -202,6 +222,15 @@ class ZooKeeperServer(object):
         s.close()
 
         return data
+
+    def _reset_stats(self):
+        """ Resets server statistics """
+        self._send_cmd('srst')
+
+        with open(self._meta_path, 'w') as f:
+            f.seek(0)
+            f.truncate()
+            f.write(str(datetime.utcnow().timestamp()))
 
     def _parse(self, data):
         """ Parse the output from the 'mntr' 4letter word command """
@@ -263,6 +292,10 @@ class ZooKeeperServer(object):
             if m is not None:
                 result['zk_znode_count'] = int(m.group(1))
                 continue
+
+        td = datetime.utcnow() - self._last_reset
+        if td.seconds // 60 >= 60:  # 60 mins
+            self._reset_stats()
 
         return result
 
@@ -327,8 +360,8 @@ def get_cluster_stats(servers):
     stats = {}
     for host, port in servers:
         try:
-            zookeeper = ZooKeeperServer(host, port)
-            stats["%s:%s" % (host, port)] = zookeeper.get_stats()
+            zk = ZooKeeperServer(host, port)
+            stats["%s:%s" % (host, port)] = zk.get_stats()
 
         except socket.error:
             # ignore because the cluster can still work even
