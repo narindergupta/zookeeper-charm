@@ -14,3 +14,9 @@ options:
       snapRetainCount most recent snapshots and the corresponding
       transaction logs in the dataDir and dataLogDir respectively
       and deletes the rest. Defaults to 3. Minimum value is 3.
+  jmx_port:
+    default: "9999"
+    type: string
+    description: |-
+      JMX port where JMX data would be exported which can be utilized
+      by telegraf to send it to prometheus for trending.

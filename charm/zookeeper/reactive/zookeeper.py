@@ -34,6 +34,8 @@ def configure():
                      cfg.get('autopurge_snap_retain_count')),
         data_changed('zk.storage.data_dir',
                      unitdata.kv().get('zookeeper.storage.data_dir')),
+        data_changed('zk.jmx_port',
+                     cfg.get('jmx_port')),
     ))
     if changed or is_flag_set('zookeeper.force-reconfigure'):
         zookeeper.install()

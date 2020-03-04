@@ -108,22 +108,27 @@ class Zookeeper(object):
         datadir = unitdata.kv().get('zookeeper.storage.data_dir',
                                     os.path.join(APP_DATADIR))
         os.makedirs(datadir, exist_ok=True)
-        render(
-            source="zoo.cfg",
-            target=os.path.join(APP_COMMON, 'zoo.cfg'),
-            owner='root',
-            perms=0o644,
-            context={
-                'myid': myid,
-                'datadir': datadir,
-                'ensemble': self.read_peers(),
-                'client_bind_addr': hookenv.unit_private_ip(),
-                'port': ZK_PORT,
-                'autopurge_purge_interval': cfg.get(
-                    'autopurge_purge_interval'),
-                'autopurge_snap_retain_count': cfg.get(
-                    'autopurge_snap_retain_count'),
-            })
+        context = {
+            'myid': myid,
+            'datadir': datadir,
+            'ensemble': self.read_peers(),
+            'client_bind_addr': hookenv.unit_private_ip(),
+            'port': ZK_PORT,
+            'autopurge_purge_interval': cfg.get(
+            'autopurge_purge_interval'),
+            'autopurge_snap_retain_count': cfg.get(
+            'autopurge_snap_retain_count'),
+            'jmx_port': cfg.get('jmx_port'),
+        }
+
+        for file_config in ('zoo.cfg', 'environment'):
+            render(
+                source=file_config,
+                target=os.path.join(APP_COMMON, file_config),
+                owner='root',
+                perms=0o644,
+                context=context
+            )
         with open(os.path.join(datadir, 'myid'), 'w') as f:
             f.write(myid)
         self.restart()
