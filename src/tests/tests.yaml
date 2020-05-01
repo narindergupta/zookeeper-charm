@@ -1,0 +1,6 @@
+gate_bundles:
+        - zookeeper-ha
+smoke_bundles:
+        - zookeeper-ha
+tests:
+        - tests.basic_deployment.BasicDeployment
