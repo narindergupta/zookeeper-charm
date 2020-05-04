@@ -1,6 +1,6 @@
 gate_bundles:
-        - zookeeper-ha
+        - bionic
 smoke_bundles:
-        - zookeeper-ha
+        - bionic
 tests:
         - tests.basic_deployment.BasicDeployment
